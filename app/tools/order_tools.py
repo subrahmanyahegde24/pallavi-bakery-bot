@@ -1,3 +1,5 @@
+import traceback
+
 from google.adk.tools import ToolContext
 
 from app.config import get_settings
@@ -146,7 +148,13 @@ async def place_order_for_user(
             frontend_url = get_settings().frontend_url.rstrip("/")
             payment_line = f"\n\n💳 <b>Complete your payment:</b>\n<a href=\"{frontend_url}/pay/{payment_token}\">Pay ₹{total:.0f} Now →</a>"
         except Exception:
-            payment_line = ""  # Payment link failed — order still placed, pay at counter
+            # Order is still placed — log why the link failed and fall back to pay at pickup
+            print(f"Razorpay order creation failed for {order['order_number']}:")
+            traceback.print_exc()
+            payment_line = (
+                f"\n\n⚠️ Online payment is unavailable right now. "
+                f"Please pay ₹{total:.0f} at pickup."
+            )
     else:
         payment_line = f"\n\n💵 <b>Pay ₹{total:.0f} at pickup.</b>"
 
